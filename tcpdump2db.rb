@@ -46,11 +46,12 @@ end
 
 @db = Mysql::init()
 @db.options(Mysql::OPT_LOCAL_INFILE)
-@db.real_connect(ARGV[1],"ruby","suga0329","tcpdump")
+@db.real_connect("133.101.57.201","ruby","suga0329","tcpdump")
 
-@table_name = File::basename(ARGV[0])
-@filename = ARGV[0]
-@dirname = File.dirname(ARGV[0])
+@filename = ARGV
+@filename.each do |fn|
+  @table_name = File::basename(fn)
+  @dirname = File.dirname(fn)
 
 total_start = Time.new
 # create table
@@ -59,7 +60,7 @@ sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NU
 
 puts "tshark_start"
 
-`tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\; > #{@dirname}/temp.txt;`
+`tshark -r #{fn} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\; > #{@dirname}/temp.txt;`
 
 puts "tshark finished"
 puts "getting header"
@@ -94,3 +95,4 @@ end_time = Time.new
 puts "LOAD DATA TIME: #{end_time - header_end}"
 
 puts "TOTALEND: #{end_time - total_start}"
+end
