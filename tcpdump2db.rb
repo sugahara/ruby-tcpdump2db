@@ -48,19 +48,18 @@ end
 @db.options(Mysql::OPT_LOCAL_INFILE)
 @db.real_connect("133.101.57.201","ruby","suga0329","tcpdump")
 
-
 io = IO.popen("lsof")
 io.each do |line|
-  if line.index("scpdump")
-    if line.split(" ").first == "scp"
-      @uploading_file = line.split(" ").last
-    end
+  if line.index("dumpscp") && line.split(" ").first == "scp"
+    @uploading_file = line.split(" ").last
   end
 end
 
+@filename = ARGV.delete(@uploading_file)
+puts "uploading file is #{@uploading_file}"
 
-@filename = ARGV
 @filename.each do |fn|
+  puts "inserting #{fn}"
   @table_name = File::basename(fn)
   @dirname = File.dirname(fn)
 
