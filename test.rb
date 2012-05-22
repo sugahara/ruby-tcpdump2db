@@ -1,6 +1,6 @@
 io = IO.popen("lsof")
 io.each do |line|
-  if line.index("scpdump")
+  if line.index("dumpscp")
     p line
     if line.split(" ").first == "scp"
       @uploading_file = line.split(" ").last
