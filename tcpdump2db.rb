@@ -66,7 +66,7 @@ p @filename
 
   total_start = Time.new
   # create table
-  sql = "show tables from `tcpdump` like `#{@table_name}`"
+  sql = "show tables from tcpdump like `#{@table_name}`"
   if @db.query(sql).num_rows() < 1
     
     sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
