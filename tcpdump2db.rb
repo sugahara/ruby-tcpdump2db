@@ -56,6 +56,7 @@ io.each do |line|
 end
 
 @filename = ARGV.delete(@uploading_file)
+p @filename
 puts "uploading file is #{@uploading_file}"
 
 @filename.each do |fn|
