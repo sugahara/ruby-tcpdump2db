@@ -56,9 +56,9 @@ io.each do |line|
 end
 
 @filename = ARGV
-p @filename.delete(@uploading_file)
+@filename.delete(@uploading_file)
 puts "uploading file is #{@uploading_file}"
-
+p @filename
 @filename.each do |fn|
   puts "inserting #{fn}"
   @table_name = File::basename(fn)
