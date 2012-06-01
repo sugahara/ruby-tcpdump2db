@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #require 'pcap'
 require 'mysql'
-
+require 'fileutils'
 
 def get_header(line)
   line = line.chomp
