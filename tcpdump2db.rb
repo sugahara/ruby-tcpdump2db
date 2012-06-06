@@ -24,6 +24,7 @@ def get_header(line)
   udp_srcport = frame_prop[8]
   udp_dstport = frame_prop[9]
   length = frame_prop[10]
+  #ヘッダの順番はテーブルのフィールドの順で
   header = {
     "time" => frame_time.strftime("%Y-%m-%d %H:%M:%S"),
     "micro_second" => micro_second,
@@ -34,13 +35,24 @@ def get_header(line)
     "eth_src" => eth_src,
     "eth_dst" => eth_dst,
     "ip_src" => ip_src,
-    "ip_dst" => ip_dst,
-    "tcp_srcport" => frame_prop[6],
-    "tcp_dstport" => frame_prop[7],
-    "udp_srcport" => frame_prop[8],
-    "udp_dstport" => frame_prop[9],
-    "length" => length
+    "ip_dst" => ip_dst
+    #"tcp_srcport" => frame_prop[6],
+    #"tcp_dstport" => frame_prop[7],
+    #"udp_srcport" => frame_prop[8],
+    #"udp_dstport" => frame_prop[9],
   }
+  if header["protocol_3"] == "tcp"
+    header["port_src"] = frame_prop[6]
+    header["port_dst"] = frame_prop[7]
+  elsif header["protocol_3"] == "udp"
+    header["port_src"] = frame_prop[8]
+    header["port_dst"] = frame_prop[9]
+  else
+    header["port_src"] = nil
+    header["port_dst"] = nil
+  end
+  header["length"] = length
+
   header
 end
 
@@ -67,9 +79,11 @@ p @filename
   total_start = Time.new
   # create table
   sql = "show tables from tcpdump like '#{@table_name}'"
+  #not exist same named table
   if @db.query(sql).num_rows() < 1
     
-    sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
+    #sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
+    sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`port_src` INT DEFAULT NULL ,`port_dst` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
     @db.query(sql)
     
     puts "tshark_start"
