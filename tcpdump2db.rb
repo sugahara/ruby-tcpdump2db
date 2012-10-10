@@ -24,6 +24,12 @@ def get_header(line)
   udp_srcport = frame_prop[8]
   udp_dstport = frame_prop[9]
   length = frame_prop[10]
+  # ICMPパケットを分析した際の対策
+  if ip_src.include?(",") || ip_dst.include?(",")
+    ip_src = ip_src.split(",")[0]
+    ip_dst = ip_dst.split(",")[0]
+  end
+
   #ヘッダの順番はテーブルのフィールドの順で
   header = {
     "time" => frame_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -32,6 +38,7 @@ def get_header(line)
     "protocol_2" => frame_protocols[1],
     "protocol_3" => frame_protocols[2],
     "protocol_4" => frame_protocols[3],
+    "protocol_5" => frame_protocols[4],
     "eth_src" => eth_src,
     "eth_dst" => eth_dst,
     "ip_src" => ip_src,
@@ -56,9 +63,17 @@ def get_header(line)
   header
 end
 
+
+db_host = ARGV[0]
+db_user_name = ARGV[1]
+db_pass = ARGV[2]
+db_name = ARGV[3]
+
 @db = Mysql::init()
 @db.options(Mysql::OPT_LOCAL_INFILE)
-@db.real_connect("133.101.57.201","ruby","suga0329","tcpdump")
+@db.real_connect(db_host, db_user_name, db_pass, db_name)
+
+puts "Database server connected."
 
 io = IO.popen("lsof")
 io.each do |line|
@@ -67,23 +82,25 @@ io.each do |line|
   end
 end
 
-@filename = ARGV
+puts "Opening file check is completed."
+
+@filename = ARGV[4...ARGV.size]
 @filename.delete(@uploading_file)
-puts "uploading file is #{@uploading_file}"
+puts "Uploading file is #{@uploading_file}"
 p @filename
 @filename.each do |fn|
-  puts "inserting #{fn}"
-  @table_name = File::basename(fn)
+  puts "Inserting #{fn}"
+  @table_name = File::basename(fn, ".pcap")
   @dirname = File.dirname(fn)
 
   total_start = Time.new
   # create table
-  sql = "show tables from tcpdump like '#{@table_name}'"
+  sql = "show tables from `#{db_name}` like '#{@table_name}'"
   #not exist same named table
   if @db.query(sql).num_rows() < 1
     
-    #sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
-    sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`port_src` INT DEFAULT NULL ,`port_dst` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
+    #sql = "CREATE TABLE `#{db_name}`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
+    sql = "CREATE TABLE `#{db_name}`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`protocol_5` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`port_src` INT DEFAULT NULL ,`port_dst` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
     @db.query(sql)
     
     puts "tshark_start"
